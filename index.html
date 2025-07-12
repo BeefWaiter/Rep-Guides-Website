@@ -10,9 +10,253 @@
   </script>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-  <!-- Full HTML content omitted for brevity -->
+
+  <!-- Header -->
+<header class="p-4 bg-white dark:bg-gray-800 shadow-md">
+  <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+    <h1 class="text-2xl font-bold">Rep Guides 📦</h1>
+    <div class="flex flex-wrap gap-3 items-center">
+      <label for="sort" class="text-sm font-medium">Sort by:</label>
+      <select id="sort" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600" onchange="sortImages()">
+        <option value="views">Views (Most)</option>
+        <option value="new">Date (Newest)</option>
+        <option value="priceLow">Price (Low to High)</option>
+        <option value="priceHigh">Price (High to Low)</option>
+        <option value="alpha">Alphabetical (A–Z)</option>
+      </select>
+      <input type="text" id="search" oninput="sortImages()" placeholder="Search by name" class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600" />
+      <button onclick="toggleTheme()" class="ml-2 px-3 py-1 rounded border dark:border-gray-500 text-sm">🌗 Toggle Theme</button>
+    </div>
+  </div>
+
+  <!-- Subheader Navigation Buttons -->
+<nav class="mt-4 flex flex-col md:flex-row justify-center gap-4 items-center text-base font-medium">
+  <!-- Reps button -->
+  <a href="#"
+     class="flex items-center justify-center gap-2 px-5 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded hover:bg-gray-300 dark:hover:bg-gray-600 min-w-[260px] text-center">
+    Reps
+  </a>
+
+  <!-- Discord button -->
+  <a href="https://discord.com/invite/KynCjfhXsk" target="_blank"
+     class="flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded min-w-[260px] text-center">
+    <img src="https://i.imgur.com/iXb26SA.png" alt="Discord" class="w-6 h-6" />
+    Join Discord community for 24/7 support and giveaways
+  </a>
+
+  <!-- Hipobuy button -->
+  <a href="https://hipobuy.com/register?inviteCode=53AZJGXC4" target="_blank"
+     class="flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded min-w-[260px] text-center">
+    <img src="https://biz.ai.cc/upload/webtalk/59/FVmjWff04G5DZdTCpV4FdzX9EfbtQk3Y6GvKF6IQ.png" alt="Hipobuy" class="w-6 h-6" />
+    Hipobuy for free first haul from me only
+  </a>
+</nav>
+
+</header>
+
+  <!-- Grid -->
+  <main class="p-4">
+    <div id="imageGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+  </main>
+
+  <!-- Add Listing Form -->
+  <div id="creatorAddForm" class="fixed bottom-24 right-4 bg-white dark:bg-gray-800 p-4 rounded shadow-lg border dark:border-gray-600 hidden z-50 w-80">
+    <h2 class="font-semibold mb-2">Add New Listing</h2>
+    <input type="text" id="newTitle" placeholder="Title" class="block mb-2 w-full p-2 border rounded dark:bg-gray-700" />
+    <input type="text" id="newLink" placeholder="Buy Link" class="block mb-2 w-full p-2 border rounded dark:bg-gray-700" />
+    <input type="number" id="newPrice" placeholder="Price" class="block mb-2 w-full p-2 border rounded dark:bg-gray-700" />
+    <input type="text" id="newSeller" placeholder="Seller Name" class="block mb-2 w-full p-2 border rounded dark:bg-gray-700" />
+
+    <div class="mb-2">
+      <label class="block text-sm font-medium mb-1">Image Source:</label>
+      <div class="flex gap-2 mb-2">
+        <label class="text-sm"><input type="radio" name="imgSource" value="upload" checked onchange="toggleImgInput()"> Upload</label>
+        <label class="text-sm"><input type="radio" name="imgSource" value="url" onchange="toggleImgInput()"> URL</label>
+      </div>
+      <input type="file" id="imageUpload" accept="image/*" multiple class="block w-full p-1 border rounded dark:bg-gray-700" />
+      <input type="text" id="imageURL" placeholder="Paste image links, separated by commas" class="block w-full p-2 border rounded dark:bg-gray-700 mt-2 hidden" />
+    </div>
+
+    <button onclick="addListing()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Add</button>
+  </div>
+
+  <!-- Creator Mode Button -->
+  <button onclick="authorizeCreator()" class="fixed bottom-4 right-4 bg-pink-500 hover:bg-pink-600 text-white text-xs px-3 py-1 rounded-full shadow z-50">👤 Creator Mode</button>
+
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden max-w-3xl w-full relative">
+      <button onclick="closeModal()" class="absolute top-2 right-3 text-2xl text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white">&times;</button>
+      <div id="modalGallery" class="flex overflow-x-auto space-x-4 p-4"></div>
+      <div class="p-4 space-y-1">
+        <h2 id="modalTitle" class="text-xl font-semibold"></h2>
+        <p id="modalSeller" class="text-sm text-gray-500 dark:text-gray-300"></p>
+        <p id="modalPrice" class="text-sm text-gray-600 dark:text-gray-400"></p>
+        <p id="modalViews" class="text-sm text-gray-600 dark:text-gray-400"></p>
+        <p id="modalDate" class="text-sm text-gray-600 dark:text-gray-400"></p>
+        <a id="hipoLink" href="#" target="_blank" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-center mt-2">Buy on HipoBuy</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-16 p-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t dark:border-gray-700">
+    <p>
+      Disclaimer: This site is for educational and informational purposes only on replicas 💖💘. I am not responsible for any actions taken based on the content provided here. All reps shown are only the best!!! JOIN THE COMMUNITY FOR GIVEAWAYS 🎁
+    </p>
+  </footer>
+
+  <!-- JavaScript -->
   <script>
-    // JavaScript logic included here
+    let creatorMode = false;
+    const creatorPassword = "Beef_Waiter3710A@123";
+
+    let images = JSON.parse(localStorage.getItem("repImages")) || [];
+
+    function saveImagesToStorage() {
+      localStorage.setItem("repImages", JSON.stringify(images));
+    }
+
+    function renderImages(imageList) {
+      const container = document.getElementById("imageGrid");
+      container.innerHTML = "";
+      imageList.forEach((img, index) => {
+        container.innerHTML += `
+          <div class="relative bg-white dark:bg-gray-800 rounded shadow hover:shadow-lg transition cursor-pointer">
+            ${creatorMode ? `<button onclick="removeListing(${index})" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded z-10">✕</button>` : ""}
+            <div onclick="openModal(${index})">
+              <img src="${img.cover}" alt="${img.title}" class="w-full h-48 object-cover rounded-t" />
+              <div class="p-3">
+                <h3 class="text-lg font-semibold">${img.title}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300">${img.views} views • $${img.price}</p>
+                <p class="text-xs text-gray-400 dark:text-gray-400">By ${img.seller} • ${img.date}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function sortImages() {
+      const sortBy = document.getElementById("sort").value;
+      const searchTerm = document.getElementById("search").value.toLowerCase();
+      let filtered = images.filter(img => img.title.toLowerCase().includes(searchTerm));
+      switch (sortBy) {
+        case "views": filtered.sort((a, b) => b.views - a.views); break;
+        case "new": filtered.sort((a, b) => new Date(b.date) - new Date(a.date)); break;
+        case "priceLow": filtered.sort((a, b) => a.price - b.price); break;
+        case "priceHigh": filtered.sort((a, b) => b.price - a.price); break;
+        case "alpha": filtered.sort((a, b) => a.title.localeCompare(b.title)); break;
+      }
+      renderImages(filtered);
+    }
+
+    function openModal(index) {
+      const img = images[index];
+      img.views++;
+
+      const gallery = document.getElementById("modalGallery");
+      gallery.innerHTML = `
+        <img src="${img.cover}" class="h-64 rounded object-cover flex-shrink-0" />
+        ${img.images.filter(url => url !== img.cover).map(url => `<img src="${url}" class="h-64 rounded object-cover flex-shrink-0" />`).join("")}
+      `;
+
+      document.getElementById("modalTitle").innerText = img.title;
+      document.getElementById("modalSeller").innerText = `Seller: ${img.seller}`;
+      document.getElementById("modalPrice").innerText = `Price: $${img.price}`;
+      document.getElementById("modalViews").innerText = `Views: ${img.views}`;
+      document.getElementById("modalDate").innerText = `Posted: ${img.date}`;
+      document.getElementById("hipoLink").href = img.link;
+      document.getElementById("modal").classList.remove("hidden");
+
+      saveImagesToStorage();
+      sortImages();
+    }
+
+    function closeModal() {
+      document.getElementById("modal").classList.add("hidden");
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      html.classList.toggle("dark");
+      localStorage.setItem("theme", html.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function applySavedTheme() {
+      const saved = localStorage.getItem("theme");
+      if (saved === "dark") document.documentElement.classList.add("dark");
+    }
+
+    function authorizeCreator() {
+      const input = prompt("Enter creator password:");
+      if (input === creatorPassword) {
+        creatorMode = true;
+        document.getElementById("creatorAddForm").classList.remove("hidden");
+        sortImages();
+      } else {
+        alert("Incorrect password.");
+      }
+    }
+
+    function removeListing(index) {
+      if (confirm("Remove this listing?")) {
+        images.splice(index, 1);
+        saveImagesToStorage();
+        sortImages();
+      }
+    }
+
+    function toggleImgInput() {
+      const source = document.querySelector('input[name="imgSource"]:checked').value;
+      document.getElementById("imageUpload").classList.toggle("hidden", source !== "upload");
+      document.getElementById("imageURL").classList.toggle("hidden", source !== "url");
+    }
+
+    function addListing() {
+      const title = document.getElementById("newTitle").value.trim();
+      const link = document.getElementById("newLink").value.trim();
+      const price = parseFloat(document.getElementById("newPrice").value);
+      const seller = document.getElementById("newSeller").value.trim();
+      const date = new Date().toISOString().slice(0, 10);
+      const source = document.querySelector('input[name="imgSource"]:checked').value;
+
+      let imagesList = [], cover = "";
+
+      if (source === "upload") {
+        const fileInput = document.getElementById("imageUpload");
+        const files = Array.from(fileInput.files);
+        if (!files.length) return alert("Please upload at least one image.");
+
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            imagesList.push(reader.result);
+            if (!cover) cover = reader.result;
+            if (imagesList.length === files.length) finalize();
+          };
+          reader.readAsDataURL(file);
+        });
+        return;
+      } else {
+        imagesList = document.getElementById("imageURL").value.split(",").map(s => s.trim()).filter(s => s);
+        cover = imagesList[0];
+        finalize();
+      }
+
+      function finalize() {
+        if (title && link && seller && !isNaN(price) && imagesList.length > 0) {
+          images.push({ title, views: 0, date, price, seller, cover, images: imagesList, link });
+          saveImagesToStorage();
+          sortImages();
+        } else {
+          alert("Fill in all fields and provide at least one image.");
+        }
+      }
+    }
+
+    applySavedTheme();
+    sortImages();
   </script>
 </body>
 </html>
